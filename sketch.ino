@@ -88,39 +88,46 @@ void loop() {
         int brightness = analogRead(LDR_PIN);
         int potValue = analogRead(POTENTIOMETER_PIN);
         // Map potentiometer reading to a distance threshold (in cm)
-        int distanceThreshold = map(potValue, 0, 1023, 10, 30);
+        int distanceThreshold = map(potValue, 0, 1023, 10, 30); // 0 is 10 cm; 1023 is 30 cm
         float distance = measureDistance();
 
         Serial.print("Brightness: ");
         Serial.print(brightness);
         Serial.print(" | Distance: ");
         Serial.print(distance);
-        Serial.print(" cm | Threshold: ");
-        Serial.println(distanceThreshold);
+        Serial.print(" cm | Thresholds: ");
+        Serial.print(distanceThreshold / 2);
+        Serial.print(" cm and ");
+        Serial.print(distanceThreshold);
+        Serial.println(" cm");
 
         // --- Classification Logic ---
         // For demonstration, assume a fixed brightness threshold (512)
         if (brightness > 800) {
           // Bright object
-          if (distance < distanceThreshold)
+          if (distance < distanceThreshold / 2)
             binNumber = 1;  // Bright & small
+          else if (distance >= distanceThreshold / 2 && distance < distanceThreshold)
+            binNumber = 2;  // Bright & medium
           else
-            binNumber = 2;  // Bright & large
+            binNumber = 3;  // Bright & large
         } else {
           // Dark object
-          if (distance < distanceThreshold)
-            binNumber = 3;  // Dark & small
+          if (distance < distanceThreshold / 2)
+            binNumber = 4;  // Dark & small
+          else if (distance >= distanceThreshold / 2 && distance < distanceThreshold)
+            binNumber = 5;  // Dark & medium
           else
-            binNumber = 4;  // Dark & large
+            binNumber = 6;  // Dark & large
         }
 
         Serial.print("Object classified to bin: ");
         Serial.println(binNumber);
 
         // --- Calculate Target Position for Stepper Motor ---
-        // Assume 4 bins evenly spaced on a full revolution:
-        // Bin 1: 0 steps, Bin 2: 50 steps, Bin 3: 100 steps, Bin 4: 150 steps
-        targetPos = (binNumber - 1) * (STEPS_PER_REV / 4);
+        // Assume 6 bins evenly spaced on a full revolution:
+        // Bin 1: 0 steps, Bin 2: 33 steps, Bin 3: 66 steps, Bin 4: 100 steps, Bin 5: 133 steps, Bin 6: 166 steps
+        targetPos = (binNumber - 1) * (STEPS_PER_REV / 6);
         stepsToMove = targetPos - currentPosition;
         // Determine direction (1 for forward, -1 for reverse)
         stepDirection = (stepsToMove >= 0) ? 1 : -1;

@@ -79,6 +79,11 @@ void loop() {
         // Clear the detection flag
         objectDetected = false;
 
+        // Turn on only red LED in IDLE enum with objectDetected = true
+        digitalWrite(LED_RED, HIGH);
+        digitalWrite(LED_YELLOW, LOW);
+        digitalWrite(LED_GREEN, LOW);
+
         // --- Sensor Readings ---
         int brightness = analogRead(LDR_PIN);
         int potValue = analogRead(POTENTIOMETER_PIN);
@@ -109,12 +114,6 @@ void loop() {
             binNumber = 4;  // Dark & large
         }
 
-        // --- Set LED Indicator based on bin ---
-        digitalWrite(LED_GREEN, (binNumber == 1) ? HIGH : LOW);
-        digitalWrite(LED_YELLOW, (binNumber == 2) ? HIGH : LOW);
-        // For dark objects we use the red LED for both bins 3 and 4.
-        digitalWrite(LED_RED, ((binNumber == 3) || (binNumber == 4)) ? HIGH : LOW);
-
         Serial.print("Object classified to bin: ");
         Serial.println(binNumber);
 
@@ -130,6 +129,11 @@ void loop() {
         // Record state start time and move to ROTATE state
         lastStepTime = millis();
         currentState = ROTATE;
+      } else {
+        // Turn on only green LED in IDLE enum with objectDetected = false
+        digitalWrite(LED_RED, LOW);
+        digitalWrite(LED_YELLOW, LOW);
+        digitalWrite(LED_GREEN, HIGH);
       }
       break;
 
@@ -151,6 +155,11 @@ void loop() {
       break;
 
     case SERVO_PUSH:
+      // Turn on only yellow LED during servo movements
+      digitalWrite(LED_RED, LOW);
+      digitalWrite(LED_YELLOW, HIGH);
+      digitalWrite(LED_GREEN, LOW);  
+
       // Activate servo to push the object into the bin
       myServo.write(90); // Move servo to push position
       if (millis() - stateStartTime >= pushDelay) {
@@ -175,10 +184,10 @@ void loop() {
       tone(BUZZER_PIN, 1000, 400);
       if (millis() - stateStartTime >= buzzerDelay) {
         noTone(BUZZER_PIN);
-        // Turn off all LEDs (reset indicators)
+        // Turn on only green LED in COMPLETE enum
         digitalWrite(LED_RED, LOW);
         digitalWrite(LED_YELLOW, LOW);
-        digitalWrite(LED_GREEN, LOW);
+        digitalWrite(LED_GREEN, HIGH);
 
         Serial.println("Sorting cycle complete. Ready for next object.");
         currentState = IDLE;  // Return to idle and wait for next object

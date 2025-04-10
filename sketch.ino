@@ -130,7 +130,7 @@ void loop() {
         targetPos = (binNumber - 1) * (STEPS_PER_REV / 6);
         stepsToMove = targetPos - currentPosition;
         // Determine direction (1 for forward, -1 for reverse)
-        stepDirection = (stepsToMove >= 0) ? 1 : -1;
+        stepDirection = (stepsToMove >= 0) ? 32 : -32;
         stepsToMove = abs(stepsToMove);
 
         // Record state start time and move to ROTATE state
@@ -149,8 +149,8 @@ void loop() {
       if (stepsToMove > 0) {
         if (millis() - lastStepTime >= stepInterval) {
           stepperMotor.step(stepDirection); // Move one step
-          currentPosition += stepDirection;
-          stepsToMove--;
+          currentPosition += (stepDirection);
+          stepsToMove-=32;
           lastStepTime = millis();
         }
       } else {
